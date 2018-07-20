@@ -9,7 +9,7 @@ atom_style	molecular
 log 		log.${simname}.txt
 read_data	${fname}
 
-# Dreiding potential information
+# Interaction information
 neighbor	0.4 bin
 neigh_modify	every 10 one 10000
 bond_style      harmonic
@@ -97,7 +97,6 @@ fix		2 all deform 1 x erate 1e-5 units box remap x
 dump ini_equa_tensile all atom 1000 deform_polymer_chain_complete_longer.lammpstrj
 
 fix def1 all print 100 "${p1} ${p2} ${p3} ${p4} ${p5} ${p6} ${p7} ${p8}" file ${simname}.def1.txt screen no
-#fix def2 all print 100 "${p1} ${t2} ${t3} ${t4} ${t5}" file ${simname}.def2.txt screen no
 fix def2 all print 100 "${p1},${p2},${p7}" file ${simname}_change_volume_longer.txt screen no title "strain,stress,lz"
 
 thermo_style	custom step temp pxx pyy pzz lx ly lz epair ebond eangle edihed
