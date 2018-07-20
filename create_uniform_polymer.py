@@ -1,8 +1,15 @@
-import time
-start_time = time.time()
 import numpy as np
 
+# Defining the function used for the generating header of the data file.
+# The input of this function includes the number of chains, the number of monomers
+# in each chain, the number of bond types, the number of atom types,
+# the number of angle types, the number of dihedral types, the size of
+# the box, and the mass of each kind of atom.
+
 def print_header(polymer_name, monomer_num, chain_num, atom_types_num, bond_types_num, angle_types_num, dihedral_types_num, xlo,xhi,ylo,yhi,zlo,zhi, mass):
+	
+	# Cacluating the number of bonds, angles and dihedrals based on the number of monomers and chains.
+
 	if atom_types_num == 0:
 		atoms_num = 0
 	else:
@@ -40,6 +47,9 @@ def print_header(polymer_name, monomer_num, chain_num, atom_types_num, bond_type
 	print("\t%d\t%.2f\n"%(atom_types_num,mass))
 	return 0
 
+# The file of configuration of the polymers contains four parts: atoms, bonds, angles
+# and dihedral. The content of any of them could be printed by the function below.
+
 def print_content(monomer_list, title):
 	if title == "Atoms":
 		info_col = 3
@@ -60,11 +70,12 @@ def print_content(monomer_list, title):
 	print("\n",end='')
 	return 0
 
+# This function is used to generate the content of the atom part of the configuration file.
+# By this file, a bunch of uniformly distributed polymer chains will be created based on the size
+# of the box and the number of polymer chains and the number monomers in each chain.
+
 def generate_particles(xlo,xhi,ylo,yhi,zlo,zhi,x_redundant,y_redundant,z_redundant,x_interval,y_interval,z_interval,monomer_num,x_chain,y_chain):
 	total_monomer_num = monomer_num * chain_num
-#	x_interval = (x_size - 2 * x_redundant) / x_chain
-#	y_interval = (y_size - 2 * y_redundant) / y_chain
-#	z_interval = (z_size - 2 * z_redundant) / monomer_num
 	monomer_list = np.zeros((total_monomer_num, 9))
 	monomer_list[:,0] = range(1, total_monomer_num + 1)
 	monomer_list[:,2] = np.ones(total_monomer_num)
@@ -82,6 +93,8 @@ def generate_particles(xlo,xhi,ylo,yhi,zlo,zhi,x_redundant,y_redundant,z_redunda
 			start_i = start_i + monomer_num
 			chain_i = chain_i + 1
 	return monomer_list
+
+# The function here is used to generate all other connection include bonds, angles and dihedrals.
 
 def generate_connections(monomer_num,x_chain,y_chain,connection_type):
 	if connection_type == "Bonds":
@@ -107,6 +120,8 @@ def generate_connections(monomer_num,x_chain,y_chain,connection_type):
 			start_i = start_i - (involve_particles - 1)
 	return (connection_list,connection_type)
 
+# This function is used to print the correspoinding title of certain block of content.
+
 def print_particles_connections(atom_types_num,bond_types_num,angle_types_num,dihedral_types_num,monomer_list,bond_boundle,angle_boundle,dihedral_boundle):
 	if atom_types_num == 1:
 		print_content(monomer_list,"Atoms")
@@ -118,10 +133,9 @@ def print_particles_connections(atom_types_num,bond_types_num,angle_types_num,di
 		print_content(dihedral_boundle[0],dihedral_boundle[1])
 	return 0
 
+# This function can be used to compute the proper box size based on the LJ coefficient
+# and the size of each monomer.
 def box_size(x_num,y_num,z_num,diameter,chain_coeff):
-#	x_box = x_num * (diameter + diameter * 3)
-#	y_box = y_num * (diameter + diameter * 3)
-#	z_box = z_num * (diameter + 2 ** (-1/6) * diameter / 3)
 	x_size = (max(x_num,y_num,z_num) + 1) * (diameter * chain_coeff)
 	y_size = x_size
 	z_size = x_size
@@ -134,14 +148,15 @@ def box_size(x_num,y_num,z_num,diameter,chain_coeff):
 	return x_size,y_size,z_size,xlo,xhi,ylo,yhi,zlo,zhi
 
 if __name__ == '__main__':
+	# Initialization the parameters.
 	polymer_name = "ODPA-P3"
 	monomer_num = 85
 	x_chain = 50
 	y_chain = 50
 	chain_num = x_chain * y_chain
-	diameter = 2 ** (-1/6)
+	diameter = 2 ** (-1/6) # diameter of the monomer.
 	chain_coeff = 4.15310957874
-	equil_len = 1.53
+	equil_len = 1.53 # stable position of the particle.
 	monomoer_coeff = equil_len / diameter
 
 	atoms_num = monomer_num * chain_num
@@ -154,18 +169,20 @@ if __name__ == '__main__':
 	dihedral_types_num = 1
 	mass = 14.01
 	x_size,y_size,z_size,xlo,xhi,ylo,yhi,zlo,zhi = box_size(x_chain,y_chain,monomer_num,diameter,chain_coeff)
+	
 	x_redundant = (x_size - (x_chain - 1) * diameter * chain_coeff) / 2
 	y_redundant = x_redundant
 	z_redundant = (z_size - (monomer_num - 1) * diameter * monomoer_coeff) / 2
 	x_interval = diameter * chain_coeff
 	y_interval = diameter * chain_coeff
 	z_interval = diameter * monomoer_coeff
+	
+	# Print the header of the configuration file based on the initialization.
 	print_header(polymer_name, monomer_num, chain_num, atom_types_num, bond_types_num, angle_types_num, dihedral_types_num, xlo,xhi,ylo,yhi,zlo,zhi, mass)
-#	print(monomer_list)
+
+	# Compute and print the content of each part of content.
 	monomer_list = generate_particles(xlo,xhi,ylo,yhi,zlo,zhi,x_redundant,y_redundant,z_redundant,x_interval,y_interval,z_interval,monomer_num,x_chain,y_chain)
 	bond_boundle = generate_connections(monomer_num,x_chain,y_chain,"Bonds")
 	angle_boundle = generate_connections(monomer_num,x_chain,y_chain,"Angles")
 	dihedral_boundle = generate_connections(monomer_num,x_chain,y_chain,"Dihedrals")
 	print_particles_connections(atom_types_num,bond_types_num,angle_types_num,dihedral_types_num,monomer_list,bond_boundle,angle_boundle,dihedral_boundle)
-
-#print("--- %s seconds ---" % (time.time() - start_time))
